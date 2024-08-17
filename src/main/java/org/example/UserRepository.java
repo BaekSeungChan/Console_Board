@@ -348,4 +348,35 @@ public class UserRepository {
         }
     }
 
+    public void findId() {
+        PreparedStatement pstmt = null;
+        String findPhoneNum = "SELECT * FROM users WHERE phone = ? AND is_deleted = FALSE";
+
+        try(Connection conn = DBConnection.getConnection()) {
+            pstmt = conn.prepareStatement(findPhoneNum);
+            System.out.print("전화번호 입력해주세요 : ");
+            String phoneNum = sc.nextLine();
+            pstmt.setString(1, phoneNum);
+            ResultSet rs = pstmt.executeQuery();
+
+            if(rs.next()) {
+                String phone = rs.getString("phone");
+
+                if(phone.equals(phoneNum)){
+                    int randomNum  = (int)(Math.random() * 900000) + 100000;
+                    System.out.println("인증번호 : " + randomNum);
+                    System.out.print("인증번호 입력해주세요 : ");
+                    int randomConfirm = sc.nextInt();
+                    sc.nextLine();
+                    if(randomNum == randomConfirm){
+                        System.out.println("회원 아이디 : " + rs.getString("username"));
+                    }
+                }
+
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
