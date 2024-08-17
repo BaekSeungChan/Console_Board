@@ -95,14 +95,66 @@ public class Board {
                 case 1:
                     break;
                 case 2:
-//                    updatePost(postId);
-//                    break;
+                    updatePost(postId);
+                    break;
                 case 3:
                     deletePost(postId);
                     break;
                 default:
                     System.out.println("잘못된 선택입니다.");
                     break;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void updatePost(int postId) {
+        PreparedStatement pstmt = null;
+        String selectPostQuery = "SELECT * FROM posts WHERE post_id = ?";
+        String updatePostQuery = "UPDATE posts SET title = ?, content = ? WHERE post_id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            pstmt = conn.prepareStatement(selectPostQuery);
+            pstmt.setInt(1, postId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String correctPassword = rs.getString("password");
+                boolean passwordMatched = false;
+                int failCount = 0;
+
+                while (!passwordMatched && failCount < 3) {
+                    System.out.print("비밀번호를 입력해주세요 > ");
+                    String passwordConfirm = sc.nextLine();
+
+                    if (correctPassword.equals(passwordConfirm)) {
+                        passwordMatched = true;
+
+                        // 수정할 제목과 내용을 입력받음
+                        System.out.print("변경할 제목: ");
+                        String updatedTitle = sc.nextLine();
+                        System.out.print("변경할 내용: ");
+                        String updatedContent = sc.nextLine();
+
+                        pstmt = conn.prepareStatement(updatePostQuery);
+                        pstmt.setString(1, updatedTitle);
+                        pstmt.setString(2, updatedContent);
+                        pstmt.setInt(3, postId);
+                        pstmt.executeUpdate();
+                        System.out.println("게시물이 수정되었습니다.");
+                    } else {
+                        failCount++;  // 비밀번호가 틀리면 횟수를 증가
+                        if (failCount < 3) {
+                            System.out.println("비밀번호가 틀렸습니다. 다시 시도해주세요.");
+                        } else {
+                            System.out.println("비밀번호를 3회 틀리셨습니다. 목록으로 돌아갑니다.");
+                        }
+                    }
+                }
+            } else {
+                System.out.println("해당 게시물이 존재하지 않습니다.");
             }
 
         } catch (SQLException e) {
@@ -123,8 +175,9 @@ public class Board {
             if (rs.next()) {
                 String password = rs.getString("password");
                 boolean passwordMatched = false;
+                int failCount = 0;
 
-                while (!passwordMatched) {
+                while (!passwordMatched && failCount < 3) {
                     System.out.print("비밀번호를 입력해주세요: ");
                     String passwordConfirm = sc.nextLine();
 
@@ -135,7 +188,12 @@ public class Board {
                         pstmt.executeUpdate();
                         System.out.println("게시물이 삭제되었습니다.");
                     } else {
-                        System.out.println("비밀번호가 일치하지 않습니다. 다시 시도해주세요.");
+                        failCount++;
+                        if (failCount < 3) {
+                            System.out.println("비밀번호가 일치하지 않습니다. 다시 시도해주세요.");
+                        } else {
+                            System.out.println("비밀번호를 3회 틀리셨습니다. 목록으로 돌아갑니다.");
+                        }
                     }
                 }
             } else {
