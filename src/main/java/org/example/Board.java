@@ -84,8 +84,65 @@ public class Board {
 
             System.out.println("----------------------------");
             System.out.println("1. 목록으로 돌아가기");
+            System.out.println("2. 게시물 수정");
+            System.out.println("3. 게시물 삭제");
             System.out.print("선택 > ");
+            int numChoice = 0;
+            numChoice = sc.nextInt();
             sc.nextLine();
+
+            switch (numChoice){
+                case 1:
+                    break;
+                case 2:
+//                    updatePost(postId);
+//                    break;
+                case 3:
+                    deletePost(postId);
+                    break;
+                default:
+                    System.out.println("잘못된 선택입니다.");
+                    break;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void deletePost(int postId) {
+        PreparedStatement pstmt = null;
+        String selectPostQuery = "SELECT * FROM posts WHERE post_id = ?";
+        String deletePostQuery = "DELETE FROM posts WHERE post_id = ?";
+
+        try(Connection conn = DBConnection.getConnection()) {
+            pstmt = conn.prepareStatement(selectPostQuery);
+            pstmt.setInt(1, postId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String password = rs.getString("password");
+                boolean passwordMatched = false;
+
+                while (!passwordMatched) {
+                    System.out.print("비밀번호를 입력해주세요: ");
+                    String passwordConfirm = sc.nextLine();
+
+                    if (password.equals(passwordConfirm)) {
+                        passwordMatched = true;
+                        pstmt = conn.prepareStatement(deletePostQuery);
+                        pstmt.setInt(1, postId);
+                        pstmt.executeUpdate();
+                        System.out.println("게시물이 삭제되었습니다.");
+                    } else {
+                        System.out.println("비밀번호가 일치하지 않습니다. 다시 시도해주세요.");
+                    }
+                }
+            } else {
+                System.out.println("해당 게시물이 존재하지 않습니다.");
+            }
+
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
