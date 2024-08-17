@@ -129,7 +129,8 @@ public class UserRepository {
         do{
             System.out.println("1. 나의 정보 확인");
             System.out.println("2. 게시물 목록");
-            System.out.println("3. 로그아웃");
+            System.out.println("3. 게시물 등록");
+            System.out.println("4. 로그아웃");
             System.out.print("원하는 기능 > ");
             numChoice = sc.nextInt();
             sc.nextLine();
@@ -137,11 +138,14 @@ public class UserRepository {
             switch (numChoice){
                 case 1:
                     showUserInfo(username);
-                    return;
+                    break;
                 case 2:
                     board.boardList();
                     break;
                 case 3:
+                    board.addPost(username);
+                    break;
+                case 4:
                     recordLogout(username);
                     System.out.println("로그아웃 성공!");
                     return;
@@ -149,7 +153,7 @@ public class UserRepository {
                     System.out.println("1, 2, 3 중 선택하세요.");
             }
 
-        } while (numChoice != 3);
+        } while (numChoice != 4);
     }
 
     private void showUserInfo(String username) {
@@ -173,6 +177,7 @@ public class UserRepository {
 
             System.out.println("1. 회원 정보 수정");
             System.out.println("2. 회원 탈퇴");
+            System.out.println("3. 뒤로 가기");
             System.out.print("원하는 기능 > ");
 
             int numChoice = 0;

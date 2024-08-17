@@ -236,4 +236,32 @@ public class Board {
             throw new RuntimeException(e);
         }
     }
+
+    public void addPost(String username) {
+        String callProcedure = "{CALL AddPost(?,?,?,?,?)}";
+
+        try(Connection conn = DBConnection.getConnection()) {
+            CallableStatement cstmt = conn.prepareCall(callProcedure);
+
+            System.out.print("제목: ");
+            String title = sc.nextLine();
+            System.out.print("내용: ");
+            String content = sc.nextLine();
+            System.out.print("비밀번호 (수정/삭제 시 사용): ");
+            String password = sc.nextLine();
+
+            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+
+            cstmt.setString(1, username);
+            cstmt.setString(2, title);
+            cstmt.setString(3, content);
+            cstmt.setString(4, password);
+            cstmt.setTimestamp(5, currentTime);
+
+            cstmt.executeUpdate();
+            System.out.println("게시물이 등록되었습니다.");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
