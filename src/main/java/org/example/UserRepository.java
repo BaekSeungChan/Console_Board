@@ -129,11 +129,13 @@ public class UserRepository {
             System.out.println("1. 나의 정보 확인");
             System.out.println("2. 게시물 목록");
             System.out.println("3. 로그아웃");
+            System.out.print("원하는 기능 > ");
             numChoice = sc.nextInt();
+            sc.nextLine();
 
             switch (numChoice){
                 case 1:
-//                    showUserInfo(username);
+                    showUserInfo(username);
                     break;
                 case 2:
 //                    showBoardList();
@@ -149,7 +151,98 @@ public class UserRepository {
         } while (numChoice != 3);
     }
 
+    private void showUserInfo(String username) {
+        String selectUserQuery = "SELECT * FROM users WHERE username =?";
+        String password = "";
 
+        try (Connection conn = DBConnection.getConnection()) {
+            PreparedStatement pstmt = conn.prepareStatement(selectUserQuery);
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("-----------------------------");
+                System.out.printf("아이디: %s\n", rs.getString("username"));
+                System.out.printf("이름: %s\n", rs.getString("name"));
+                System.out.printf("전화번호: %s\n", rs.getString("phone"));
+                System.out.printf("주소: %s\n", rs.getString("address"));
+                System.out.printf("성별: %s\n", rs.getString("gender"));
+                password = rs.getString("password");
+            }
+
+            System.out.println("1. 회원 정보 수정");
+            System.out.println("2. 회원 탈퇴");
+            System.out.print("원하는 기능 > ");
+
+            int numChoice = 0;
+            numChoice = sc.nextInt();
+            sc.nextLine();
+
+            switch (numChoice){
+                case 1:
+                    System.out.print("비밀번호 입력해주세요: ");
+                    String passwordConfirm = sc.nextLine();
+                    if(password.equals(passwordConfirm)){
+                        updateUserInfo(username);
+                    } else {
+                        System.out.println("비밀번호가 일치하지 않습니다.");
+                    }
+                    break;
+                case 2:
+//                    deleteUser(username);
+                    return;
+                default:
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void updateUserInfo(String username) {
+        PreparedStatement pstmt = null;
+
+        try (Connection conn = DBConnection.getConnection()) {
+            System.out.println("-----------------------------");
+            System.out.println("변경할 정보를 입력하세요.");
+
+            System.out.print("이름: ");
+            String name = sc.nextLine();
+
+            System.out.print("전화번호: ");
+            String phone = sc.nextLine();
+
+            System.out.print("주소: ");
+            String address = sc.nextLine();
+
+            System.out.println("1. 회원 정보 수정");
+            System.out.println("2. 취소");
+            System.out.print("원하는 기능 > ");
+
+            int numChoice = 0;
+
+            numChoice = sc.nextInt();
+            sc.nextLine();
+
+            if(numChoice == 1){
+                String updateUserSql = "UPDATE users SET name =?, phone =?, address =? WHERE username = ?";
+                pstmt = conn.prepareStatement(updateUserSql);
+                pstmt.setString(1, name);
+                pstmt.setString(2, phone);
+                pstmt.setString(3, address);
+                pstmt.setString(4, username);
+
+                int result = pstmt.executeUpdate();
+
+                if (result > 0) {
+                    System.out.println("회원 정보가 수정되었습니다.");
+                }
+            } else {
+                return;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
     public boolean loginUser(String username, String password){
         String selectUserQuery = "SELECT * FROM users WHERE username = ?";
         try(Connection conn = DBConnection.getConnection()){
