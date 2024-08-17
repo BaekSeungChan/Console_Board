@@ -26,6 +26,9 @@ public class Main {
                 case 1:
                     user.signUp();
                     break;
+                case 2:
+                    user.login();
+                    break;
             }
         }
     }

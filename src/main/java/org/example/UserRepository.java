@@ -2,6 +2,7 @@ package org.example;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -62,8 +63,112 @@ public class UserRepository {
         }
     }
 
-    public void loginUser(String username, String password){
+    public void login(){
 
+        String username = "";
+        String password = "";
+
+        while (true){
+            System.out.print("아이디: ");
+            username = sc.nextLine();
+
+            System.out.print("비밀번호: ");
+            password = sc.nextLine();
+
+            System.out.println("1. 로그인");
+            System.out.println("2. 다시입력");
+            System.out.println("3. 이전화면으로");
+
+            System.out.print("원하는 기능? ");
+
+            int numChoice = sc.nextInt();
+            sc.nextLine();
+
+            switch (numChoice){
+                case 1:
+                    if (loginUser(username, password)) {
+                        recordLogin(username);
+                        showMenu(username);
+                    } else {
+                        System.out.println("로그인 실패. 아이디 또는 비밀번호를 확인하세요.");
+                    }
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    return;
+                default:
+                    System.out.println("1, 2, 3 중 선택하세요.");
+            }
+        }
+    }
+
+    private void recordLogin(String username) {
+        PreparedStatement pstmt = null;
+        String insertHistorySql = "INSERT INTO login_history (username, login_time) VALUES ( ?, NOW())";
+        String updateUserLogin = "UPDATE users SET last_login = NOW() WHERE username = ?";
+
+        try(Connection conn = DBConnection.getConnection()){
+            pstmt = conn.prepareStatement(insertHistorySql);
+            pstmt.setString(1, username);
+            pstmt.executeUpdate();
+
+            pstmt = conn.prepareStatement(updateUserLogin);
+            pstmt.setString(1, username);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void showMenu(String username) {
+        int numChoice = 0;
+
+        do{
+            System.out.println("1. 나의 정보 확인");
+            System.out.println("2. 게시물 목록");
+            System.out.println("3. 로그아웃");
+            numChoice = sc.nextInt();
+
+            switch (numChoice){
+                case 1:
+//                    showUserInfo(username);
+                    break;
+                case 2:
+//                    showBoardList();
+                    break;
+                case 3:
+//                    recordLogout(username);
+                    System.out.println("로그아웃 성공!");
+                    break;
+                default:
+                    System.out.println("1, 2, 3 중 선택하세요.");
+            }
+
+        } while (numChoice != 3);
+    }
+
+
+    public boolean loginUser(String username, String password){
+        String selectUserQuery = "SELECT * FROM users WHERE username = ?";
+        try(Connection conn = DBConnection.getConnection()){
+            PreparedStatement pstmt = conn.prepareStatement(selectUserQuery);
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            if(rs.next()){
+                if(rs.getString("password").equals(password)){
+                    System.out.println("로그인 성공!");
+                    return true;
+                } else {
+                    System.out.println("비밀번호가 일치하지 않습니다.");
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return false;
     }
 
     private void insertUser(String username, String password, String name, String phone, String address, String gender){
@@ -88,4 +193,5 @@ public class UserRepository {
             throw new RuntimeException(e);
         }
     }
+
 }
