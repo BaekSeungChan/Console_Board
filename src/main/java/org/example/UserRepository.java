@@ -89,6 +89,7 @@ public class UserRepository {
                     if (loginUser(username, password)) {
                         recordLogin(username);
                         showMenu(username);
+                        return;
                     } else {
                         System.out.println("로그인 실패. 아이디 또는 비밀번호를 확인하세요.");
                     }
@@ -138,9 +139,9 @@ public class UserRepository {
 //                    showBoardList();
                     break;
                 case 3:
-//                    recordLogout(username);
+                    recordLogout(username);
                     System.out.println("로그아웃 성공!");
-                    break;
+                    return;
                 default:
                     System.out.println("1, 2, 3 중 선택하세요.");
             }
@@ -169,6 +170,25 @@ public class UserRepository {
         }
 
         return false;
+    }
+
+    private void recordLogout(String username) {
+        PreparedStatement pstmt = null;
+
+        String logoutSql = "UPDATE login_history SET logout_time = NOW() WHERE username = ?";
+        String userLogoutSql = "UPDATE users SET last_logout = NOW() WHERE username = ?";
+
+        try(Connection conn = DBConnection.getConnection()){
+            pstmt = conn.prepareStatement(logoutSql);
+            pstmt.setString(1, username);
+            pstmt.executeUpdate();
+
+            pstmt = conn.prepareStatement(userLogoutSql);
+            pstmt.setString(1, username);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void insertUser(String username, String password, String name, String phone, String address, String gender){
