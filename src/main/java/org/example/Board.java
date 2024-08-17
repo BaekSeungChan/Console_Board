@@ -31,6 +31,12 @@ public class Board {
                 case "N":
                     currentPage++;
                     break;
+                case "3":
+                    System.out.print("페이지 번호 > ");
+                    int postId = sc.nextInt();
+                    sc.nextLine();
+                    showPostDetail(postId);
+                    break;
                 case "4":
                     exit = true;
                     break;
@@ -49,6 +55,40 @@ public class Board {
             }
         }
 
+    }
+
+    private void showPostDetail(int postId) {
+        PreparedStatement pstmt = null;
+        String selectPostQuery = "SELECT * FROM posts WHERE post_id = ?";
+        String updateViewCountQuery = "UPDATE posts SET view_count = view_count + 1 WHERE post_id = ?";
+
+        try(Connection conn = DBConnection.getConnection()) {
+            pstmt = conn.prepareStatement(updateViewCountQuery);
+            pstmt.setInt(1, postId);
+            pstmt.executeUpdate();
+
+            pstmt = conn.prepareStatement(selectPostQuery);
+            pstmt.setInt(1, postId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("----------------------------");
+                System.out.println("제목: " + rs.getString("title"));
+                System.out.println("작성자: " + rs.getString("author"));
+                System.out.println("내용: " + rs.getString("content"));
+                System.out.println("조회수: " + rs.getInt("view_count"));
+                System.out.println("작성일: " + rs.getTimestamp("created_at"));
+            } else {
+                System.out.println("해당 게시물이 존재하지 않습니다.");
+            }
+
+            System.out.println("----------------------------");
+            System.out.println("1. 목록으로 돌아가기");
+            System.out.print("선택 > ");
+            sc.nextLine();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void showPageList(int currentPage, int pageSize){
