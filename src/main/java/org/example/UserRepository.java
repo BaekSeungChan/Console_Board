@@ -8,6 +8,7 @@ import java.util.Scanner;
 
 public class UserRepository {
     Scanner sc = new Scanner(System.in);
+    Board board = new Board();
 
     public void signUp(){
         String username = "";
@@ -138,7 +139,7 @@ public class UserRepository {
                     showUserInfo(username);
                     return;
                 case 2:
-//                    showBoardList();
+                    board.boardList();
                     break;
                 case 3:
                     recordLogout(username);
