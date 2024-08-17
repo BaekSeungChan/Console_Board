@@ -136,7 +136,7 @@ public class UserRepository {
             switch (numChoice){
                 case 1:
                     showUserInfo(username);
-                    break;
+                    return;
                 case 2:
 //                    showBoardList();
                     break;
@@ -189,9 +189,44 @@ public class UserRepository {
                     }
                     break;
                 case 2:
-//                    deleteUser(username);
+                    deleteUser(username);
                     return;
                 default:
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void deleteUser(String username) {
+        String selectUserQuery = "SELECT * FROM users WHERE username = ?";
+        String insertDeleteUserQuery = "INSERT INTO deleted_users (user_id, username, password, name, phone, address, gender) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String updateDeleteUserQuery = "UPDATE users SET is_deleted = TRUE WHERE username = ?";
+        PreparedStatement pstmt = null;
+
+        try (Connection conn = DBConnection.getConnection()) {
+            pstmt = conn.prepareStatement(selectUserQuery);
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            if(rs.next()){
+                PreparedStatement insertPstmt = conn.prepareStatement(insertDeleteUserQuery);
+                insertPstmt.setInt(1, rs.getInt("user_id"));
+                insertPstmt.setString(2, rs.getString("username"));
+                insertPstmt.setString(3, rs.getString("password"));
+                insertPstmt.setString(4, rs.getString("name"));
+                insertPstmt.setString(5, rs.getString("phone"));
+                insertPstmt.setString(6, rs.getString("address"));
+                insertPstmt.setString(7, rs.getString("gender"));
+                insertPstmt.executeUpdate();
+
+                PreparedStatement deletePstmt = conn.prepareStatement(updateDeleteUserQuery);
+                deletePstmt.setString(1, username);
+                deletePstmt.executeUpdate();
+
+                System.out.println("회원 탈퇴가 완료되었습니다.");
+            } else {
+                System.out.println("존재하지 않는 회원입니다.");
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
