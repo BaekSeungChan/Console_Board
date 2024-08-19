@@ -1,49 +1,46 @@
+-- 데이터베이스 생성
 CREATE DATABASE console_board;
-
 USE console_board;
 
+-- users 테이블 (회원 관리)
 CREATE TABLE users(
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(100) NOT NULL,
     name VARCHAR(50) NOT NULL,
     phone VARCHAR(20),
-    address VARCHAR(255) NOT NULL,  -- VARCHAR 길이 지정 필요
+    address VARCHAR(255) NOT NULL,
     gender CHAR(1),                 -- 성별(M/F)
     last_login DATETIME,            -- 마지막 로그인 시간
     last_logout DATETIME,           -- 마지막 로그아웃 시간
     is_deleted BOOLEAN DEFAULT FALSE -- 회원 탈퇴 여부
 );
 
-
-SELECT * FROM users;
-
+-- users 테이블에 role 컬럼 추가
 ALTER TABLE users ADD COLUMN role VARCHAR(50);
 
-
+-- login_history 테이블 (로그인/로그아웃 기록)
 CREATE TABLE login_history(
-	id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50),
     login_time TIMESTAMP,
     logout_time TIMESTAMP,
     FOREIGN KEY (username) REFERENCES users(username)
 );
 
-SELECT * FROM login_history;
-
+-- deleted_users 테이블 (회원 탈퇴 기록)
 CREATE TABLE deleted_users(
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(100) NOT NULL,
     name VARCHAR(50) NOT NULL,
     phone VARCHAR(20),
-    address VARCHAR(255) NOT NULL, 
+    address VARCHAR(255) NOT NULL,
     gender CHAR(1),        
     delete_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- 회원 탈퇴 시간
 );
 
-SELECT * FROM deleted_users;
-
+-- posts 테이블 (게시물 관리)
 CREATE TABLE posts (
     post_id INT PRIMARY KEY AUTO_INCREMENT,  -- 게시물 번호 (자동 증가)
     author VARCHAR(50),                      -- 작성자
@@ -54,7 +51,7 @@ CREATE TABLE posts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- 작성일
 );
 
-
+-- 게시물 등록을 위한 저장 프로시저
 DELIMITER $$
 CREATE PROCEDURE AddPost(
     IN p_author VARCHAR(50),
@@ -69,7 +66,7 @@ BEGIN
 END $$
 DELIMITER ;
 
-
+-- posts 테이블에 더미 데이터 삽입
 INSERT INTO posts (author, title, content, password, view_count)
 VALUES
 ('Alice', '게시물 제목 1', '게시물 내용 1', 'password1', 10),
@@ -98,8 +95,8 @@ VALUES
 ('Xander', '게시물 제목 24', '게시물 내용 24', 'password24', 19),
 ('Yvonne', '게시물 제목 25', '게시물 내용 25', 'password25', 33);
 
-
+-- AddPost 프로시저 호출 예시
 CALL AddPost('작성자명', '제목', '내용', '비밀번호', NOW());
 
+-- posts 테이블 조회
 SELECT * FROM posts;
-
