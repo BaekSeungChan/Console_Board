@@ -7,7 +7,7 @@ public class Board {
 
     Scanner sc = new Scanner(System.in);
 
-    public void boardList(){
+    public void boardList(String username){
         int currentPage = 1;
         int pageSize = 10;
         boolean exit = false;
@@ -35,7 +35,7 @@ public class Board {
                     System.out.print("페이지 번호 > ");
                     int postId = sc.nextInt();
                     sc.nextLine();
-                    showPostDetail(postId);
+                    showPostDetail(postId, username);
                     break;
                 case "4":
                     exit = true;
@@ -57,10 +57,12 @@ public class Board {
 
     }
 
-    private void showPostDetail(int postId) {
+    private void showPostDetail(int postId, String username) {
         PreparedStatement pstmt = null;
         String selectPostQuery = "SELECT * FROM posts WHERE post_id = ?";
         String updateViewCountQuery = "UPDATE posts SET view_count = view_count + 1 WHERE post_id = ?";
+        String roleAdminQuery = "SELECT role FROM users WHERE username = ?";
+        String roleAdmin = null;
 
         try(Connection conn = DBConnection.getConnection()) {
             pstmt = conn.prepareStatement(updateViewCountQuery);
@@ -70,6 +72,13 @@ public class Board {
             pstmt = conn.prepareStatement(selectPostQuery);
             pstmt.setInt(1, postId);
             ResultSet rs = pstmt.executeQuery();
+
+            pstmt = conn.prepareStatement(roleAdminQuery);
+            pstmt.setString(1, username);
+            ResultSet adminRs = pstmt.executeQuery();
+            if (adminRs.next()) {
+                roleAdmin = adminRs.getString("role");
+            }
 
             if (rs.next()) {
                 System.out.println("----------------------------");
@@ -98,7 +107,7 @@ public class Board {
                     updatePost(postId);
                     break;
                 case 3:
-                    deletePost(postId);
+                    deletePost(postId, roleAdmin);
                     break;
                 default:
                     System.out.println("잘못된 선택입니다.");
@@ -162,44 +171,52 @@ public class Board {
         }
     }
 
-    private void deletePost(int postId) {
+    private void deletePost(int postId, String roleAdmin) {
         PreparedStatement pstmt = null;
         String selectPostQuery = "SELECT * FROM posts WHERE post_id = ?";
         String deletePostQuery = "DELETE FROM posts WHERE post_id = ?";
 
-        try(Connection conn = DBConnection.getConnection()) {
+        try (Connection conn = DBConnection.getConnection()) {
             pstmt = conn.prepareStatement(selectPostQuery);
             pstmt.setInt(1, postId);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                String password = rs.getString("password");
-                boolean passwordMatched = false;
-                int failCount = 0;
+                if ("admin".equalsIgnoreCase(roleAdmin)) {
+                    pstmt = conn.prepareStatement(deletePostQuery);
+                    pstmt.setInt(1, postId);
+                    pstmt.executeUpdate();
+                    System.out.println("게시물이 삭제되었습니다.");
+                } else {
+                    // Non-admin users need password verification
+                    String correctPassword = rs.getString("password");
+                    boolean passwordMatched = false;
+                    int failCount = 0;
 
-                while (!passwordMatched && failCount < 3) {
-                    System.out.print("비밀번호를 입력해주세요: ");
-                    String passwordConfirm = sc.nextLine();
+                    while (!passwordMatched && failCount < 3) {
+                        System.out.print("비밀번호를 입력해주세요 > ");
+                        String passwordConfirm = sc.nextLine();
 
-                    if (password.equals(passwordConfirm)) {
-                        passwordMatched = true;
-                        pstmt = conn.prepareStatement(deletePostQuery);
-                        pstmt.setInt(1, postId);
-                        pstmt.executeUpdate();
-                        System.out.println("게시물이 삭제되었습니다.");
-                    } else {
-                        failCount++;
-                        if (failCount < 3) {
-                            System.out.println("비밀번호가 일치하지 않습니다. 다시 시도해주세요.");
+                        if (correctPassword.equals(passwordConfirm)) {
+                            passwordMatched = true;
+
+                            pstmt = conn.prepareStatement(deletePostQuery);
+                            pstmt.setInt(1, postId);
+                            pstmt.executeUpdate();
+                            System.out.println("게시물이 삭제되었습니다.");
                         } else {
-                            System.out.println("비밀번호를 3회 틀리셨습니다. 목록으로 돌아갑니다.");
+                            failCount++;
+                            if (failCount < 3) {
+                                System.out.println("비밀번호가 틀렸습니다. 다시 시도해주세요.");
+                            } else {
+                                System.out.println("비밀번호를 3회 틀리셨습니다. 목록으로 돌아갑니다.");
+                            }
                         }
                     }
                 }
             } else {
                 System.out.println("해당 게시물이 존재하지 않습니다.");
             }
-
 
         } catch (SQLException e) {
             throw new RuntimeException(e);

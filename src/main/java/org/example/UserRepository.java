@@ -140,7 +140,7 @@ public class UserRepository {
                     showUserInfo(username);
                     break;
                 case 2:
-                    board.boardList();
+                    board.boardList(username);
                     break;
                 case 3:
                     board.addPost(username);
@@ -326,7 +326,7 @@ public class UserRepository {
     }
 
     private void insertUser(String username, String password, String name, String phone, String address, String gender){
-        String insertUserQuery = "INSERT INTO users (username, password, name, phone, address, gender) VALUES(?, ?, ?, ?, ?, ?)";
+        String insertUserQuery = "INSERT INTO users (username, password, name, phone, address, gender,role) VALUES(?, ?, ?, ?, ?, ?, ?)";
 
         try(Connection conn = DBConnection.getConnection()) {
             PreparedStatement pstmt = conn.prepareStatement(insertUserQuery);
@@ -336,6 +336,7 @@ public class UserRepository {
             pstmt.setString(4, phone);
             pstmt.setString(5, address);
             pstmt.setString(6, gender);
+            pstmt.setString(7, "user");
 
             int resultNum = pstmt.executeUpdate();
 
